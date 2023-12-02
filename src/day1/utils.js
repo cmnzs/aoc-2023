@@ -29,17 +29,12 @@ function parseNumbers(line) {
     return true;
   });
 }
-// get first number from line, get last number from line
-// sum the numbers
+
 export function sumNumbers(numbers) {
   const firstNumber = numbers[0];
   const lastNumber = numbers[numbers.length - 1];
   return firstNumber * 10 + lastNumber;
 }
-// parse written numbers and individual digits
-// use a dictionary for the written numbers
-// e.g. "one" -> 1, "two" -> 2, "three" -> 3, "four" -> 4, "five" -> 5, "six" -> 6, "seven" -> 7, "eight" -> 8, "nine" -> 9
-// e.g. "one3four" -> [1,3,4]
 
 export function parseWrittenNumbers(line) {
   const writtenNumbers = {
