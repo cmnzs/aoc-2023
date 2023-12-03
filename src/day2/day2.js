@@ -72,12 +72,37 @@ export class Solution {
         return sumOfGameIds;
     }
 
-    computePart2(lines) {
-        // Add your logic to compute Part 2 here
-        // Return the computed value for Part 2
+
+    // const pullList = [
+    //     { red: 10, green: 12, blue: 14 },
+    //     { red: 5, green: 8, blue: 10 },
+    //     { red: 15, green: 3, blue: 4 }
+    // ];
+
+    static getFewestNumberOfPulls(pullList) {
+        return pullList.reduce((acc, pull) => {
+            for (const color in pull) {
+                if (pull[color] > acc[color]) {
+                    acc[color] = pull[color];
+                }
+            }
+            return acc;
+        }, {red: 0, blue: 0, green: 0});
     }
 
+    computePart2() {
+        const lines = this.provider.getFilePart2();
+        const parsedLines = lines.map(line => Solution.parseLine(line));
+
+        const minPullCounts = parsedLines.map((line) => {
+            const pullList = line.pulls;
+            const minCount = Solution.getFewestNumberOfPulls(pullList)
+            const power = minCount.red * minCount.green * minCount.blue;
+            return power;
+        })
     
+        return minPullCounts.reduce((acc, power) => acc + power, 0);
+    }
 
 }
 

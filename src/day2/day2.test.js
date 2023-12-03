@@ -173,7 +173,24 @@ describe('isGamePossible', () => {
     });
 });
 
-describe.only('overall runner', () => {
+describe('min cubes required', () => {
+
+    it('returns minimum number of cubes required for the pull list', () => {
+        const pullList = [
+            { red: 10, green: 12, blue: 14 },
+            { red: 5, green: 8, blue: 10 },
+            { red: 15, green: 3, blue: 4 }
+        ];
+        const result = Solution.getFewestNumberOfPulls(pullList);
+
+        expect(result).toStrictEqual({
+            red: 15, green: 12, blue: 14
+        });
+    });
+
+});
+
+describe('overall runner', () => {
 
     it('returns the correct result for part 1', () => {
         const solution = new Solution();
@@ -183,6 +200,15 @@ describe.only('overall runner', () => {
         const result = solution.computePart1();
         console.log(result)
         expect(result).toBe(2256);
-    }
-    );
+    });
+
+    it.only('returns the correct result for part 2', () => {
+        const solution = new Solution();
+        const currentPath = process.cwd();
+        const filePath = `${currentPath}/src/day2/day2.part1.txt`;
+        solution.provider.setFilePathPart2(filePath);
+        const result = solution.computePart2();
+        console.log(result)
+        expect(result).toBe(74229);
+    });
 });
