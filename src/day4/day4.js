@@ -10,8 +10,8 @@ Card 6: 31 18 13 56 72 | 74 77 10 23 35 67 36 11`;
 
 const fileInput = fs.readFileSync(path.join('./src/day4/day4.txt'), 'utf8');
 
-// const parsed = fileInput
-const parsed = sampleInput
+const parsed = fileInput
+// const parsed = sampleInput
     .split('\n')
     .map(row => row.split(':'))
     .map(row => {
@@ -43,7 +43,7 @@ function score(winningNumbers, yourNumbers) {
     return Math.pow(2, intersection.size - 1);
 }
 
-parsed.forEach(item => console.log(item))
+parsed.forEach(item => console.log(item));
 
 const score1 = parsed.reduce((acc, item) => {
     const scoreForItem = score(item.winningNumbers, item.yourNumbers);
@@ -53,9 +53,85 @@ const score1 = parsed.reduce((acc, item) => {
 
 console.log(`Score 1: ${score1}`);
 
+const cardsWithMatches = parsed.map(item => {
+    const winningSet = new Set(item.winningNumbers);
+    const yourSet = new Set(item.yourNumbers);
+    const numMatches = new Set([...winningSet].filter(x => yourSet.has(x))).size;
 
-// const score2 = parsed.reduce((acc, item) => {
-//     const scoreForItem = score(item.winningNumbers, item.yourNumbers);
-//     console.log(`Card ${item.cardNumber} score: ${scoreForItem}`);
-//     return acc + scoreForItem;
-// }, 0);
+    return {
+        ...item,
+        numMatches
+    };
+});
+
+function buildNewCardList(cardsWithMatches) {
+    
+    const withIndex = cardsWithMatches.map((item, index) => {
+        return {
+            ...item,
+            index
+        }
+    });
+
+    const queue = withIndex.map(item => item);
+
+    const newCards = [];
+    let iterations = 0;
+
+    while(queue.length > 0) {
+        
+        iterations++;
+
+        const it = queue.shift();
+        newCards.push(it);
+        const {index, numMatches} = it;
+
+        if (numMatches === 0) {
+            console.log(`Iterations: ${iterations}`)
+            continue
+        } else {
+            
+            const toAdd = [];
+            for (let i = 0; i < numMatches; i++) {
+                toAdd.push(withIndex[index + i + 1]);
+            }
+
+            if (toAdd.length > 0){
+                queue.push(...toAdd);
+            }
+        };   
+    }
+    return newCards;
+}
+
+function buildNewCardList2(cardsWithMatches) {
+
+    const withIndex = cardsWithMatches.map((item, index) => {
+        return {
+            ...item,
+            index
+        }
+    });
+
+    const newCards = [];
+    const queue = [...withIndex];
+
+    while(queue.length > 0) {
+        const card = queue.shift();
+        newCards.push(card);
+
+        console.log(`queue size: ${queue.length}`);
+        
+        if (card.numMatches > 0) {
+            const nextCards = withIndex.slice(card.index + 1, card.index + 1 + card.numMatches);
+            queue.push(...nextCards);
+
+            // console.log(`queue: ${queue.map(item => item.cardNumber)}`)
+        }
+    }
+
+    return newCards;
+}
+
+
+console.log(buildNewCardList2(cardsWithMatches).length);
