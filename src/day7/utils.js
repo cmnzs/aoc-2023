@@ -30,7 +30,7 @@ export function comparator(handA, handB) {
     }
 
     if (indexA === indexB) {
-        console.log(`handTypeA: ${handTypeA} indexA: ${indexA} handTypeB: ${handTypeB} indexB: ${indexB}`);
+        // console.log(`handTypeA: ${handTypeA} indexA: ${indexA} handTypeB: ${handTypeB} indexB: ${indexB}`);
         const cardValuesOrder = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
 
         for (let i = 0; i < handA.length; i++) {
@@ -38,7 +38,7 @@ export function comparator(handA, handB) {
             const cardB = handB[i];
             const indexA = cardValuesOrder.indexOf(cardA);
             const indexB = cardValuesOrder.indexOf(cardB);
-            console.log(`cardA: ${cardA} indexA: ${indexA} cardB: ${cardB} indexB: ${indexB}`);
+            // console.log(`cardA: ${cardA} indexA: ${indexA} cardB: ${cardB} indexB: ${indexB}`);
             if (indexA < indexB) {
                 return 1;
             } else if (indexA > indexB) {
@@ -115,6 +115,48 @@ export function getHandType(hand) {
     }
 
     return "high-card";
+}
+
+export const cardValuesOrder2 = ['A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2', 'J'];
+
+function getHandType2(hand) {
+
+    if (!hand.has("J")) {
+        return getHandType(hand);
+    }
+    const handWithoutJokers = hand.filter(card => card !== "J");
+
+    const potentialHands = [];
+
+}
+
+export function generateHands(partialHand) {
+
+    const cardSet = ['A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2']
+
+    const numToAdd = 5 - partialHand.length;
+
+
+    return cardSet.flatMap(
+        (v, i) => cardSet.slice(i+numToAdd).map( w => [v, w] )
+    );
+}
+
+export function generateCombinations(arr, k) {
+    let combinations = [];
+
+    function run(level, start, currentCombo) {
+        if (level === k) {
+            combinations.push(currentCombo);
+            return;
+        }
+        for (let i = start; i < arr.length; i++) {
+            run(level + 1, i + 1, currentCombo.concat(arr[i]));
+        }
+    }
+
+    run(0, 0, []);
+    return combinations;
 }
 
 export function printHand(line) {

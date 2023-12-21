@@ -10,8 +10,8 @@ QQQJA 483`;
 
 const fileInput = fs.readFileSync("src/day7/input.txt", "utf8");
 
-// const lines = parseInput(sampleInput);
-const lines = parseInput(fileInput);
+const lines = parseInput(sampleInput);
+// const lines = parseInput(fileInput);
 
 const linesWithType = lines.map(line => {
     const handType = getHandType(line.hand);
