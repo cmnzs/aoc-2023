@@ -6,19 +6,22 @@ Hand: KTJJT Bid: 220 Type: two pairs
 Hand: T55J5 Bid: 684 Type: three-of-a-kind
 Hand: QQQJA Bid: 483 Type: three-of-a-kind
  */
-export function comparator(handA, handB) {
+
+
+export const order = [
+    'five-of-a-kind',
+    'four-of-a-kind',
+    'full-house',
+    'three-of-a-kind',
+    'two-pair',
+    'one-pair',
+    'high-card'
+];
+
+export function comparator(handA, handB, cardValuesOrder = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2']) {
     const handTypeA = getHandType(handA);
     const handTypeB = getHandType(handB);
 
-    const order = [
-        'five-of-a-kind',
-        'four-of-a-kind',
-        'full house',
-        'three-of-a-kind',
-        'two pairs',
-        'one pair',
-        'high-card'
-    ];
 
     const indexA = order.indexOf(handTypeA);
     const indexB = order.indexOf(handTypeB);
@@ -31,8 +34,6 @@ export function comparator(handA, handB) {
 
     if (indexA === indexB) {
         // console.log(`handTypeA: ${handTypeA} indexA: ${indexA} handTypeB: ${handTypeB} indexB: ${indexB}`);
-        const cardValuesOrder = ['A', 'K', 'Q', 'J', 'T', '9', '8', '7', '6', '5', '4', '3', '2'];
-
         for (let i = 0; i < handA.length; i++) {
             const cardA = handA[i];
             const cardB = handB[i];
@@ -96,7 +97,7 @@ export function getHandType(hand) {
         }
 
         if (counts.includes(3) && counts.includes(2)) {
-            return "full house";
+            return "full-house";
         }
     }
 
@@ -106,12 +107,12 @@ export function getHandType(hand) {
         }
 
         if (counts.includes(2)) {
-            return "two pairs";
+            return "two-pair";
         }
     }
 
     if (cardCounts.size === 4) {
-        return "one pair";
+        return "one-pair";
     }
 
     return "high-card";
@@ -170,16 +171,16 @@ export function printHand(line) {
         case "four-of-a-kind":
             color = colors.fgGreen;
             break;
-        case "full house":
+        case "full-house":
             color = colors.fgBlue;
             break;
         case "three-of-a-kind":
             color = colors.fgYellow;
             break;
-        case "two pairs":
+        case "two-pair":
             color = colors.fgMagenta;
             break;
-        case "one pair":
+        case "one-pair":
             color = colors.fgCyan;
             break;
         default:

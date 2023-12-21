@@ -1,16 +1,13 @@
 import fs from "fs";
-
-import { comparator, parseInput, generateCombinations, cardValuesOrder2 } from "./utils.js";
-
+import { getHandType, order, parseInput, generateCombinations } from "./utils.js";
 
 Object.prototype.also = function(fn) {
     fn(this);
     return this;
 }
 
-String.prototype.characterCountMap = function() {
+String.prototype.itemCount = function() {
     const countMap = {};
-
     for (const char of this) {
         if (countMap[char]) {
             countMap[char]++;
@@ -18,13 +15,20 @@ String.prototype.characterCountMap = function() {
             countMap[char] = 1;
         }
     }
-
     return countMap;   
 }
 
-const ALL_COMBOS = generateCombinations(cardValuesOrder2, 5)//.map(hand => hand.join(""));
-
-console.log(`ALL_COMBOS: ${ALL_COMBOS.length}`);
+Array.prototype.itemCount = function() {
+    const countMap = {};
+    for (const item of this) {
+        if (countMap[item]) {
+            countMap[item]++;
+        } else {
+            countMap[item] = 1;
+        }
+    }
+    return countMap;   
+}
 
 const sampleInput = `32T3K 765
 T55J5 684
@@ -32,111 +36,173 @@ KK677 28
 KTJJT 220
 QQQJA 483`;
 
-// const fileInput = fs.readFileSync("src/day7/input.txt", "utf8");
+const fileInput = fs.readFileSync("src/day7/input.txt", "utf8");
 
-// const lines = parseInput(fileInput);
-const lines = parseInput(sampleInput);
-
-function processJokerHand(hand) {
-    const cardToCountMap = new Map();
-
-    for (let card of hand) {
-        if (cardToCountMap.has(card)) {
-            cardToCountMap.set(card, cardToCountMap.get(card) + 1);
-        } else {
-            cardToCountMap.set(card, 1);
+const lines = parseInput(fileInput).map(line => {
+        return {
+            ...line,
+            handType: classifyJokerHand(line.hand)
         }
-    }
-
-    const counts = Array.from(cardToCountMap.values());
-
-    const jokerCount = cardToCountMap.get("J");
-
-    const copy = new Map(cardToCountMap);
-    copy.delete("J");
-
-    const keyValuePairs = Array.from(copy).map(([key, value]) => `${key}: ${value}`);
-
-    const keys = Array.from(copy).map(([k, v]) => k);
-
-    const potentialHand = getBestPossibleHandsFromCards(keys);
-    console.log(`potentialHand: ${potentialHand}`)
-    return `${jokerCount} joker | other cards: [${keyValuePairs.join(", ")}]`;
-}
-
-function getBestPossibleHandsFromCards(cards) {
-    const hands = [];
-
-    // cards contains a list of cards that are not jokers
-    // ALL_COMBOS contains a list of all possible hands
-    // we want to filter out all hands that are incompatible with the list in cards
-
-    const possible_hands = ALL_COMBOS.filter(hand => {
-        const handMap = hand.characterCountMap();
-        const cardMap = hand.characterCountMap();        
-
-    })
-
-    console.log(` for card ${cards} possible_hands: ${possible_hands.length}, diff: ${ALL_COMBOS.length - possible_hands.length}`);
-    const copy = [...possible_hands];
-
-    copy.sort((a, b) => {
-        return comparator(a, b);
     });
 
-    return copy[copy.length - 1];
+const itemsWithjokers = lines.filter(line => line.hand.indexOf('J') !== -1);
+
+console.log(`itemsWithjokers: ${itemsWithjokers.length}`)
+lines.forEach((x, i) => console.log(i, x.hand.join(''), x.handType));
+
+// const lines = parseInput(sampleInput).map(line => {
+//     return {
+//         ...line,
+//         handType: classifyJokerHand(line.hand)
+//     }
+// });
+
+// console.log(lines)
+
+const sorted = [...lines.map(x => x) ];
+
+const cardValuesOrder2 = ['A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2', 'J']
+
+sorted.sort((a, b) => comparator2(a.hand, b.hand, cardValuesOrder2));
+
+console.log(`sorted: ${sorted.length}`)
+// console.log(sorted);
+
+const totalWinnings = sorted.reduce((acc, line, index) => {
+    return acc + (line.bid * (index + 1));
+}, 0);
+
+console.log(`total winnings: ${totalWinnings}`);
+
+export function classifyJokerHand(hand) {
+    const charMap = hand.itemCount();
+    const jokerCount = charMap['J'] ? charMap['J'] : 0;
+    const nonJokerEntries = Object.entries(charMap).filter(([key, value]) => key !== 'J');
+
+    if (jokerCount === 5) {
+        return 'five-of-a-kind';
+    }
+
+    if (jokerCount == 4) {
+        return 'five-of-a-kind';
+    }
+
+    if (jokerCount == 3) {
+        if (nonJokerEntries.length === 2) {
+            return 'four-of-a-kind';
+        }
+        else {
+            return 'five-of-a-kind';
+        }
+    }
+
+    if (jokerCount == 2) {
+        switch (nonJokerEntries.length) {
+            case 3:
+                // all are different, we can make 3 of a kind
+                return 'three-of-a-kind';
+            case 2:
+                // there are 2 unique, so 
+                // there is 1 card that has 2 copies, and 1 card that has 1
+                // if we use both jokers to make the same card that has 2
+                // then we have 4 of a kind
+                return 'four-of-a-kind';
+            case 1:
+                // if there is only 1 unique card out of the three
+                // then we can make a five-of-a-kind
+                return 'five-of-a-kind';
+            default:
+                throw new Error(`unexpected nonJokerEntries.length: ${nonJokerEntries.length}`);
+        }
+    }
+
+    if (jokerCount == 1) {
+        // there will be 4 non-joker cards
+        switch (nonJokerEntries.length) {
+            case 4:
+                // all are different, we can make 2 pair
+                return 'one-pair';
+            case 3:
+                // there are 3 unique, so 
+                // there is 1 card that has 2 copies, and 2 cards that have 1
+                // if we use the joker to make the same card that has 2
+                // then we have 3 of a kind
+                return 'three-of-a-kind';
+            case 2:
+
+                // there are two cases here, one where the two unique cards
+                // have a 3, 1 split
+                // or they have a 2,2 split
+                
+                // if there are 2 unique cards out of the four
+                // then we can make a full house
+                // there are 2, 2 pairs. so we add to one,
+                // then we have a triple and a double
+
+                // if the split is 3,1 then we can make a four-of-a-kind
+
+                if (nonJokerEntries[0][1] === 2 && nonJokerEntries[1][1] === 2) {
+                
+                    return 'full-house';
+                } else {
+                    return 'four-of-a-kind';
+                }
+
+            case 1:
+                // if there is only 1 unique card out of the four
+                // then we can make a five-of-a-kind
+                return 'five-of-a-kind';
+            default:
+                throw new Error(`unexpected nonJokerEntries.length: ${nonJokerEntries.length}`);
+        }
+    }
+
+    if (jokerCount == 0) {
+        return getHandType(hand);
+    }
 }
 
-export function getHandType(hand) {
-    const cardCounts = new Map();
+export function comparator2(handA, handB, cardValuesOrder) {
+    const handTypeA = classifyJokerHand(handA);
+    const handTypeB = classifyJokerHand(handB);
 
-    for (let card of hand) {
-        if (cardCounts.has(card)) {
-            cardCounts.set(card, cardCounts.get(card) + 1);
-        } else {
-            cardCounts.set(card, 1);
+    const indexA = order.indexOf(handTypeA);
+    const indexB = order.indexOf(handTypeB);
+
+    if (indexA < indexB) {
+        return 1;
+    } else if (indexA > indexB) {
+        return -1;
+    }
+
+    if (indexA === indexB) {
+        // console.log(`handTypeA: ${handTypeA} indexA: ${indexA} handTypeB: ${handTypeB} indexB: ${indexB}`);
+        for (let i = 0; i < handA.length; i++) {
+            const cardA = handA[i];
+            const cardB = handB[i];
+            const indexA = cardValuesOrder.indexOf(cardA);
+            const indexB = cardValuesOrder.indexOf(cardB);
+            // console.log(`cardA: ${cardA} indexA: ${indexA} cardB: ${cardB} indexB: ${indexB}`);
+            if (indexA < indexB) {
+                return 1;
+            } else if (indexA > indexB) {
+                return -1;
+            }
         }
     }
 
-    // joker conditional
-    if (cardCounts.has("J")) {
-        return processJokerHand(hand);
-    }
-
-    const counts = Array.from(cardCounts.values());
-
-    if (cardCounts.size === 1) {
-        return "five-of-a-kind";
-    }
-
-    if (cardCounts.size === 2) {
-        if (counts.includes(4) && counts.includes(1)) {
-            return "four-of-a-kind";
-        }
-
-        if (counts.includes(3) && counts.includes(2)) {
-            return "full house";
-        }
-    }
-
-    if (cardCounts.size === 3) {
-        if (counts.includes(3)) {
-            return "three-of-a-kind";
-        }
-
-        if (counts.includes(2)) {
-            return "two pairs";
-        }
-    }
-
-    if (cardCounts.size === 4) {
-        return "one pair";
-    }
-
-    return "high-card";
+    return 0;
 }
 
+export function getWinningsForLines(lines) {
+    const copy = [...lines.map(x => x)];
 
-lines
-    .map(line => { return { ...line, handType: getHandType(line.hand) } })
-    .also(lines => lines.forEach(line => console.log(line)))
+    const cardValuesOrder2 = ['A', 'K', 'Q', 'T', '9', '8', '7', '6', '5', '4', '3', '2', 'J']
+
+    copy.sort((a, b) => comparator2(a.hand, b.hand, cardValuesOrder2));
+
+    const totalWinnings = copy.reduce((acc, line, index) => {
+        return acc + (line.bid * (index + 1));
+    }, 0);
+    return totalWinnings;
+}
